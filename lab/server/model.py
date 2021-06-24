@@ -10,12 +10,6 @@ class AccessPoint(base):
     id = Column(Integer, primary_key=True)
     mac_address = Column(String)
 
-class Location(base):
-    __tablename__ = "location"
-    id = Column(Integer, primary_key=True)
-    x = Column(Float)
-    y = Column(Float)
-    z = Column(Float)
 
 class Sample(base):
     __tablename__ = "sample"
@@ -32,6 +26,14 @@ class Sample(base):
         rssi = _rssi
         ap = _ap
 
+
+class CalibratingMobile(base):
+    __tablename__ = "calibrating_mobile"
+    mac_address = Column(String, primary_key=True)
+    loc_id = Column(Integer, ForeignKey("location.id"))
+    location = relationship("Location", backref="calibrating_mobile")
+
+
 class FingerprintValue(base):
     __tablename__ = "fingerprint_value"
     id = Column(Integer, primary_key=True)
@@ -41,8 +43,9 @@ class FingerprintValue(base):
     location = relationship("Location", backref="fingerprint_value")
     ap = relationship("AccessPoint", backref="fingerprint_value")
 
-class CalibratingMobile(base):
-    __tablename__ = "calibrating_mobile"
-    mac_address = Column(String, primary_key=True)
-    loc_id = Column(Integer, ForeignKey("location.id"))
-    location = relationship("Location", backref="calibrating_mobile")
+class Location(base):
+    __tablename__ = "location"
+    id = Column(Integer, primary_key=True)
+    x = Column(Float)
+    y = Column(Float)
+    z = Column(Float)
