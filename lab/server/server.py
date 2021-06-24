@@ -139,13 +139,11 @@ def start_calibration():
         #Make and add the location instance to the database
         location = Location(x=x, y=y, z=z)
         if not database.exist_loc(location):
-            print("add location §§§§§§!§§§§!!!!")
             database.add_to_database(location)
-        print("LOCATION ????")
+
         #Make and add the calibrating mobile instance to the database
         cal_mobile = CalibratingMobile(mac_address=mac_addr, loc_id=database.get_loc_id(loc=location))
         if not database.exist_calib(cal_mobile):
-            print(database.exist_calib(cal_mobile))
             database.add_to_database(cal_mobile)
         
         #Get all matching samples (all samples that match the mac_addr and which are less that 1s old)
@@ -216,7 +214,7 @@ def stop_calibration():
         mac_addr = str(mac_addr)
 
 
-        #Delete any calibrating_mobile entry whose mac_address equal parameter mac_addr
+        #Delete any calibrating_mobile entry whose mac_address equal parameter mac_addr using database method
         database.del_calibrating_all(mac_addr)
  
         return "\n\rPOST ok No content\n"
@@ -283,7 +281,7 @@ def locate():
         # Get all matching samples from the database
         matching_samples = database.get_matching_samples(mac_addr)
         # Get all fingerprint values from the database
-        reference_points = database.get_all_fp()
+        reference_points = database.get_fingerprint_all()
 
         d_min = 200 #Random value (not too high and not too low, reasonable)
         location = Location() #Initialise an empty location
@@ -294,7 +292,16 @@ def locate():
                 d_min = distance
                 location = point.location
 
-        return location
+        json_response = {
+                        "id":location.id,
+                        "x":location.x,
+                        "y":location.y,
+                        "z":location.z
+                        }
+
+        json_response = json.dumps(json_response, indent=4)
+
+        return json_response
 
     else:
         #If request.method is equal to 'GET', fetch and return locations
@@ -320,11 +327,14 @@ def rssi_distance(point, samples):
         Taken from td's lessons
         """
         count = 0
-        qsum = 0.0
+        sum_resp = 0.0
         for sample in samples:
             i = sample.ap_id
             if i != -1:
                 count += 1
-                qsum += (sample.rssi - point.rssi)**2
-        qsum += (95**2) * (1 + len(samples) - 2*count)
-        return sqrt(qsum)
+                sum_resp += (sample.rssi - point.rssi)**2
+        sum_resp += (95**2) * (1 + len(samples) - 2*count)
+        if sum_resp == 0:
+            return sum_resp
+        else:
+            return sqrt(abs(sum_resp))
